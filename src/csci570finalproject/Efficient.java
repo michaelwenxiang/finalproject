@@ -22,21 +22,21 @@ public class Efficient {
             {94, 48, 110, 0}
         };
     
-    public static int getAlphas(String x, String y) {
+    public static int getAlphas(char x, char y) {
        int i = getIndex(x);
        int j = getIndex(y);
        return ALPHAS[i][j];
     }
 
-    public static int getIndex(String x) {
+    public static int getIndex(char x) {
         switch(x) {
-        case "A":
+        case 'A':
             return 0;
-        case "C":
+        case 'C':
             return 1;
-        case "G":
+        case 'G':
             return 2;
-        case "T":
+        case 'T':
             return 3;
         default: 
             throw new RuntimeException("invalid char " + x);
@@ -73,28 +73,87 @@ public class Efficient {
         }
 
         GeneratedStrings strings = getGeneratedStrings(inputFilePath);
-        double beforeUsedMem = getMemoryInKB();
-        double startTime = getTimeInMilliseconds();
+    
+        SolutionResult alignment = basesolution(strings);
 
-        //Object alignment = efficientSolution(inputFilePath, strY, delta, alpha);
-        double afterUsedMem = getMemoryInKB();
-        double endTime = getTimeInMilliseconds();
-        double totalUsage = afterUsedMem - beforeUsedMem;
-        double totalTime = endTime - startTime;
-
-        output(outputFilePath, 1, strings, totalTime, totalUsage);
+        output(outputFilePath, alignment);
 
     }
     
-    public static void output(String outputFilePath, double cost, GeneratedStrings strings, double totalTime, double totalMemoryUsage) {
+    public static SolutionResult basesolution(GeneratedStrings strings) {
+        SolutionResult result = new SolutionResult();
+        double beforeUsedMem = getMemoryInKB();
+        double startTime = getTimeInMilliseconds();
+        int m = strings.x.length();
+        int n = strings.y.length();
+        int[][] solutons = new int[m+1][n+1];
+        for (int i = 0; i<= m; i++) {
+            solutons[i][0] = i * DELTA;
+        }
+        for (int j = 0; j<= n; j++) {
+            solutons[0][j] = j * DELTA;
+        }
+        
+        for (int i = 1; i <= m; i++)  {
+            for (int j = 1; j <= n; j++) {
+                char a = strings.x.charAt(i-1);
+                char b = strings.y.charAt(j-1);
+                int case1 = solutons[i-1][j-1] + getAlphas(a, b);
+                int case2 = solutons[i-1][j] + DELTA;
+                int case3 = solutons[i][j-1] + DELTA;
+                solutons[i][j] = Math.min(Math.min(case1, case2), case3);
+            }
+        }
+        result.cost = solutons[m][n];
+        int i = m;
+        int j = n;
+        int maxLen = m+n;
+        char[] alightmentX = new char[maxLen];
+        char[] alightmentY = new char[maxLen];
+        int startPos = maxLen;
+        while (i > 1 || j > 1 ) {
+            char xChar;
+            char yChar;
+            if (i < 0 ) {
+                xChar = '_';
+                yChar = strings.y.charAt(--j);
+            } else if (j < 0 ) {
+                xChar = strings.x.charAt(--i);
+                yChar =  '_' ;
+            } else if (solutons[i][j] == solutons[i-1][j] + DELTA) {
+                xChar =strings.x.charAt(--i);
+                yChar = '_';
+            } else if (solutons[i][j] == solutons[i][j-1] + DELTA) {            
+                xChar =  '_' ;
+                yChar = strings.y.charAt(--j);
+            } else {
+                xChar = strings.x.charAt(--i);
+                yChar = strings.y.charAt(--j);
+            }
+            startPos--;
+            alightmentX[startPos] = xChar;
+            alightmentY[startPos] = yChar;         
+        }
+        result.x = new String(alightmentX, startPos, maxLen - startPos);
+        result.y = new String(alightmentY, startPos, maxLen - startPos);
+        double afterUsedMem = getMemoryInKB();
+        double endTime = getTimeInMilliseconds();
+        result.totalMemoryUsage = afterUsedMem - beforeUsedMem;
+        result.totalTime = endTime - startTime;
+        
+        return result;
+       
+    }
+    
+    public static void output(String outputFilePath,  SolutionResult alignment) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath, false))){
-            bw.write(cost + System.lineSeparator());
-            bw.write(strings.x + System.lineSeparator());
-            bw.write(strings.y + System.lineSeparator());
+            bw.write(alignment.cost + System.lineSeparator());
+            bw.write(alignment.x + System.lineSeparator());
+            bw.write(alignment.y + System.lineSeparator());
             //write total time
-            bw.write(totalTime + System.lineSeparator());
-          //write total Memory
-                bw.write(totalMemoryUsage + System.lineSeparator());
+            bw.write(alignment.totalTime + System.lineSeparator());
+           //write total Memory
+            bw.write(alignment.totalMemoryUsage + System.lineSeparator());
   
             } catch (IOException e) {
                 System.err.println("An I/O error occurred: " + e.getMessage());
@@ -178,5 +237,14 @@ public class Efficient {
     public static class GeneratedStrings {
         public String x;
         public String y;
+    }
+    
+    public static class SolutionResult{
+        public String x;
+        public String y;    
+        public double cost;
+        double totalTime;
+        double totalMemoryUsage;
+        
     }
 }
