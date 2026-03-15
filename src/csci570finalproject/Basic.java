@@ -272,7 +272,7 @@ public class Basic {
     public static class SolutionResult{
         public String x;
         public String y;    
-        public double cost;
+        public int cost;
         double totalTime;
         double totalMemoryUsage;
         

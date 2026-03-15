@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import csci570finalproject.Basic.SolutionResult;
+
 public class Efficient {
 
     public static void main(String[] args) {
@@ -70,7 +72,7 @@ public class Efficient {
         }
         result.cost = solutions[m][n];
 
-        Basic.GeneratedStrings recursionResult = recursion(strings, 0, m, 0, n, solutions);
+        SolutionResult recursionResult = DivideAndConquesAllignment(strings.x, strings.y);
         result.x = recursionResult.x;
         result.y = recursionResult.y;
         double afterUsedMem = Basic.getMemoryInKB();
@@ -80,102 +82,81 @@ public class Efficient {
 
         return result;
     }
-
-    public static Basic.GeneratedStrings recursion(Basic.GeneratedStrings strings, int startX, int endX, int startY,
-            int endY, int[][] solutions) {
-        if (endX - startX < 2 || endY - startY <= 2) {
-            return basesolution(strings, startX, endX, startY, endY, solutions);
-        }
-        String x = strings.x.substring(startX, endX);
-        String y = strings.y.substring(startY, endY);
+    
+    public static Basic.SolutionResult DivideAndConquesAllignment(String x, String y) {
         int m = x.length();
         int n = y.length();
-        int msplit = m / 2;
-        int lStartX = 0;
-        int lEndX = msplit;
-        int rStartX = msplit + 1;
-        int rEndX = m+1;
-        int ySplit = 1;
-        int minCost = solutions[msplit][1];
-        for (int j = 2; j <= n; j++) {
-            if (solutions[msplit][j] < minCost) {
-                minCost = solutions[msplit][j];
-                ySplit = j;
+        if (m <= 2 || n <=2) {
+            return Basic.basesolution(new Basic.GeneratedStrings(x, y));
+        }
+        Basic.SolutionResult result = new Basic.SolutionResult();
+        int split = n/2;
+        int[][] forward = spaceEfficientAlignment(x, y.substring(0, split));
+        int[][] backward = backwardSpaceEfficientAlignment(x, y.substring(split+1, n));
+        int lowYPos = 0;
+        int lowCost = forward[0][1] + backward[0][1];
+        for (int i = 1; i <=m; i++) {
+            int sum = forward[i][1] + backward[i][1];
+            if (lowCost < sum) {
+                lowCost = sum;
+                lowYPos = i;
             }
         }
-       
-        int lStartY = 0;
-        int lEndY = ySplit;
-        int rStartY = ySplit + 1;
-        int rEndY = n+1;
-        Basic.GeneratedStrings leftString = recursion(strings, lStartX, lEndX, lStartY, lEndY, solutions);
-        Basic.GeneratedStrings rightString = ySplit == n ? new Basic.GeneratedStrings() : recursion(strings, rStartX, rEndX, rStartY, rEndY, solutions);
-        return new Basic.GeneratedStrings(leftString.x + rightString.x, leftString.y + rightString.y);
+        Basic.SolutionResult left = DivideAndConquesAllignment(x.substring(0, lowYPos), y.substring(0, split));
+        Basic.SolutionResult right = DivideAndConquesAllignment(x.substring(lowYPos+1, m), y.substring(split+1, n));
+                             
+        result.x = left.x + x.charAt(lowYPos)+ right.x;
+        result.y =left.y + y.charAt(split)+ right.y;
+        return result;
     }
 
-    public static Basic.GeneratedStrings basesolution(Basic.GeneratedStrings strings, int startX, int endX, int startY,
-            int endY, int[][] solutions) {
-        String x = strings.x.substring(startX, endX);
-        String y = strings.y.substring(startY, endY);
+    public static int[][] spaceEfficientAlignment(String x, String y) {
         int m = x.length();
         int n = y.length();
-
-        int i = m;
-        int j = n;
-        int maxLen = m + n;
-        char[] alightmentX = new char[maxLen];
-        char[] alightmentY = new char[maxLen];
-        int startPos = maxLen;
-        while (i > 0 || j > 0) {
-            char xChar = '_';
-            char yChar = '_';
-            int iminus = i - 1;
-            int jminus = j - 1;
-            char xMinusChar = iminus < 0 ? '_' : x.charAt(iminus);
-            char yMinusChar = jminus < 0 ? '_' : y.charAt(jminus);
-            int solutionsi = i + startX;
-            int solutionsj = j + startY;
-            if ((i == 1 && j == 1) || (iminus >= 0 && jminus >= 0
-                    && solutions[solutionsi][solutionsj] == solutions[solutionsi - 1][solutionsj - 1]
-                            + Basic.getAlphas(xMinusChar, yMinusChar))) {
-                xChar = xMinusChar;
-                yChar = yMinusChar;
-                --i;
-                --j;
-            } else if (iminus < 0 || (iminus == 0 && jminus <= 1) || (jminus >= 0
-                    && solutions[solutionsi][solutionsj] == solutions[solutionsi][solutionsj - 1] + Basic.DELTA)) {
-                xChar = '_';
-                yChar = yMinusChar;
-                --j;
-            } else if (jminus < 0 || (jminus == 0 && iminus <= 1) || (iminus >= 0
-                    && solutions[solutionsi][solutionsj] == solutions[solutionsi - 1][solutionsj] + Basic.DELTA)) {
-                xChar = xMinusChar;
-                yChar = '_';
-                --i;
-            }
-            startPos--;
-            alightmentX[startPos] = xChar;
-            alightmentY[startPos] = yChar;
-            if (i == 0 || j == 0) {
-                if (i == 0) {
-                    while (j > 0) {
-                        startPos--;
-                        alightmentX[startPos] = '_';
-                        alightmentY[startPos] = y.charAt(--j);
-                    }
-                } else {
-                    while (i > 0) {
-                        startPos--;
-                        alightmentX[startPos] = x.charAt(--i);
-                        alightmentY[startPos] = '_';
-                    }
-                }
+        int[][] alignment = new int[m+1][2];
+        for (int i = 0; i <= m; i++) {
+            alignment[i][0] = i * Basic.DELTA;
+        }
+        for (int j = 1; j <n; j++) {
+            alignment[0][1] = j * Basic.DELTA;
+            char a = y.charAt(j);
+            for (int i = 1; i < m; i++) {
+                char b = x.charAt(i);
+                int case1 = alignment[i - 1][0] + Basic.getAlphas(a, b);
+                int case2 = alignment[i - 1][1] + Basic.DELTA;
+                int case3 = alignment[i][0] + Basic.DELTA;
+                alignment[i][1] = Math.min(Math.min(case1, case2), case3);
             }
         }
-
-        return new Basic.GeneratedStrings(new String(alightmentX, startPos, maxLen - startPos),
-                new String(alightmentY, startPos, maxLen - startPos));
-
+        for (int i = 0; i < m; i++) {
+            alignment[i][0] = alignment[i][1];
+        }
+        return alignment;        
     }
+    
+    public static int[][] backwardSpaceEfficientAlignment(String x, String y) {
+        int m = x.length();
+        int n = y.length();
+        int[][] alignment = new int[m+1][2];
+        for (int i = m; i >=0; i--) {
+            alignment[i][0] = i * Basic.DELTA;
+        }
+        for (int j = n-1; j >=0; j--) {
+            alignment[n][1] = (n-j) * Basic.DELTA;
+            char a = y.charAt(j);
+            for (int i = m-1; i >= 0; i--) {
+                char b = x.charAt(i);
+                int case1 = alignment[i + 1][0] + Basic.getAlphas(a, b);
+                int case2 = alignment[i + 1][1] + Basic.DELTA;
+                int case3 = alignment[i][0] + Basic.DELTA;
+                alignment[i][1] = Math.min(Math.min(case1, case2), case3);
+            }
+        }
+        for (int i = 0; i <= m; i++) {
+            alignment[i][0] = alignment[i][1];
+        }
+        return alignment;        
+    }
+ 
 
 }
