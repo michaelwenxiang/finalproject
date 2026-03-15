@@ -12,11 +12,10 @@ import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import csci570finalproject.Efficient.GeneratedStrings;
-import csci570finalproject.Efficient.SolutionResult;
+
 
 public class Basic {
-    private static int DELTA = 30;
+    public static int DELTA = 30;
     public static final int[][] ALPHAS = {
             {0, 110, 48, 94},
             {110, 0, 118, 48},
@@ -249,16 +248,23 @@ public class Basic {
         }
     }
 
-    private static double getMemoryInKB() {
+    public static double getMemoryInKB() {
         double total = Runtime.getRuntime().totalMemory();
         return (total - Runtime.getRuntime().freeMemory()) / 1e3;
     }
 
-    private static double getTimeInMilliseconds() {
+    public static double getTimeInMilliseconds() {
         return System.nanoTime() / 10e6;
     }
     
     public static class GeneratedStrings {
+        public GeneratedStrings(String x, String y) {
+           this.x = x;
+           this.y = y;
+        }
+        public GeneratedStrings() {
+         
+        }
         public String x;
         public String y;
     }
