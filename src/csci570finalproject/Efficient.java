@@ -107,32 +107,54 @@ public class Efficient {
         result.cost = solutons[m][n];
         int i = m;
         int j = n;
-        int maxLen = m+n;
+        int maxLen = m + n;
         char[] alightmentX = new char[maxLen];
         char[] alightmentY = new char[maxLen];
         int startPos = maxLen;
-        while (i > 1 || j > 1 ) {
-            char xChar;
-            char yChar;
-            if (i < 0 ) {
-                xChar = '_';
-                yChar = strings.y.charAt(--j);
-            } else if (j < 0 ) {
-                xChar = strings.x.charAt(--i);
-                yChar =  '_' ;
-            } else if (solutons[i][j] == solutons[i-1][j] + DELTA) {
-                xChar =strings.x.charAt(--i);
-                yChar = '_';
-            } else if (solutons[i][j] == solutons[i][j-1] + DELTA) {            
+        while (i > 0 || j > 0 ) {
+            char xChar = '_';
+            char yChar = '_';
+            int iminus = i -1;
+            int jminus = j -1;
+            char xMinusChar = iminus < 0 ? '_' : strings.x.charAt(iminus);
+            char yMinusChar = jminus < 0 ? '_' : strings.y.charAt(jminus);
+            if ((i == 1 && j == 1) || 
+                (iminus >= 0 && jminus >= 0 && solutons[i][j] == solutons[iminus][j-1] + getAlphas(xMinusChar, yMinusChar))){
+                xChar = xMinusChar;
+                yChar = yMinusChar;
+                --i;
+                --j;
+            } else if (iminus < 0 || 
+                      (iminus == 0 && jminus <= 1) || 
+                      (jminus >= 0 && solutons[i][j] == solutons[i][jminus] + DELTA)) {            
                 xChar =  '_' ;
-                yChar = strings.y.charAt(--j);
-            } else {
-                xChar = strings.x.charAt(--i);
-                yChar = strings.y.charAt(--j);
-            }
+                yChar = yMinusChar;
+                --j;
+            } else if (jminus < 0 || 
+                      (jminus == 0 && iminus <= 1) || 
+                      (iminus >= 0 && solutons[i][j] == solutons[iminus][j] + DELTA)) {
+                xChar = xMinusChar;
+                yChar = '_';
+                --i;
+            } 
             startPos--;
             alightmentX[startPos] = xChar;
-            alightmentY[startPos] = yChar;         
+            alightmentY[startPos] = yChar;   
+            if (i == 0 || j == 0)  {
+                if (i == 0) {
+                    while (j > 0) {
+                        startPos--;
+                        alightmentX[startPos] = '_';
+                        alightmentY[startPos] = strings.y.charAt(--j);   
+                    }
+                } else {
+                    while (i > 0) {
+                        startPos--;
+                        alightmentX[startPos] = strings.x.charAt(--i);
+                        alightmentY[startPos] =  '_';   
+                    }
+                }
+            }
         }
         result.x = new String(alightmentX, startPos, maxLen - startPos);
         result.y = new String(alightmentY, startPos, maxLen - startPos);
