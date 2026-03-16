@@ -14,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class Efficient1 {
+public class Efficient {
     public static int DELTA = 30;
     public static final int[][] ALPHAS = {
             {0, 110, 48, 94},
@@ -101,13 +101,14 @@ public class Efficient1 {
         
         double afterUsedMem = getMemoryInKB();
         double endTime = getTimeInMilliseconds();
-        result.totalMemoryUsage = afterUsedMem - beforeUsedMem;
+        result.totalMemoryUsage = result.totalMemoryUsage + afterUsedMem - beforeUsedMem;
         result.totalTime = endTime - startTime;
 
         return result;
     }
     
     public static SolutionResult DivideAndConquesAllignment(String x, String y) {
+        double beforeUsedMem = getMemoryInKB();
         int m = x.length();
         int n = y.length();
         if (m == 0) {
@@ -141,14 +142,15 @@ public class Efficient1 {
 
         SolutionResult left = DivideAndConquesAllignment(x.substring(0, minIdx), y.substring(0, split));
         SolutionResult right = DivideAndConquesAllignment(x.substring(minIdx), y.substring(split));  System.out.println("x: " + x + ", y: " + y);
-      System.out.println("forward: " + Arrays.toString(forward));
-      System.out.println("backward: " + Arrays.toString(backward));
-      System.out.println("minIdx: " + minIdx + ", split: " + split);
-      System.out.println("x left: " + x.substring(0, minIdx) + ", y left: " + y.substring(0, split));
-      System.out.println("x right: " + x.substring(minIdx) + ", y right: " + y.substring(split));
+        // System.out.println("forward: " + Arrays.toString(forward));
+        // System.out.println("backward: " + Arrays.toString(backward));
+        //  System.out.println("minIdx: " + minIdx + ", split: " + split);
+        // System.out.println("x left: " + x.substring(0, minIdx) + ", y left: " + y.substring(0, split));
+        // System.out.println("x right: " + x.substring(minIdx) + ", y right: " + y.substring(split));
         SolutionResult result = new SolutionResult();
         result.x = left.x + right.x;
         result.y = left.y + right.y;
+        result.totalMemoryUsage = left.totalMemoryUsage + right.totalMemoryUsage + getMemoryInKB() - beforeUsedMem;
         return result;
     }
 
