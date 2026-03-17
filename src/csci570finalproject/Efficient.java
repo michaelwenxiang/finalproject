@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -131,10 +130,11 @@ public class Efficient {
         int[] forward = spaceEfficientAlignment(x, y.substring(0, split));
         int[] backward = spaceEfficientAlignmentBackward(x, y.substring(split, n));
         int minIdx = 0;
+        int halfM = m/2;
         int minCost = forward[0] + backward[0];
         for (int i = 1; i <= m; i++) {
             int sum = forward[i] + backward[i];
-            if (sum < minCost) {
+            if (sum < minCost || (sum == minCost && minIdx < halfM)) {
                 minCost = sum;
                 minIdx = i;
             }
